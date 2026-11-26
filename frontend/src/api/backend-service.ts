@@ -1,6 +1,6 @@
 import { request } from './client'
 import { moduleMeta } from '@/data/modules'
-import type { ActionResult, EntryRow, OverviewResult, PageResult } from '@/data/types'
+import type { ActionResult, EntryRow, OverviewResult, PageResult, SettlementPanel } from '@/data/types'
 
 export { moduleMeta }
 
@@ -57,5 +57,11 @@ export async function downloadEntries(
 export async function loadOverview(): Promise<OverviewResult> {
   const response = await request('/api/overview')
   if (!response.ok) throw new Error('运营概览读取失败')
+  return await response.json()
+}
+
+export async function loadSettlement(key: string, id: number): Promise<SettlementPanel> {
+  const response = await request(`/api/${key}/${id}/settlement`)
+  if (!response.ok) throw new Error('结清面板读取失败')
   return await response.json()
 }

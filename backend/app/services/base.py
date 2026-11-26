@@ -59,6 +59,16 @@ class BaseModuleService:
         rows.append(entry)
         return entry, []
 
+    def create_failure_message(self, reasons: list[str]) -> str:
+        """把 create_entry 的拒绝原因拼成可读消息。
+
+        原因全部是必填字段名时按“缺少必填字段”报告；领域服务返回的
+        完整句子（如访问放行校验失败）则原样拼接。
+        """
+        if reasons and all(reason in self.REQUIRED_FIELDS for reason in reasons):
+            return f"缺少必填字段：{'、'.join(reasons)}"
+        return "；".join(reasons)
+
     def run_action(self, entry_id: int, action: str) -> tuple[dict[str, Any] | None, str]:
         entry = store.find(self.MODULE, entry_id)
         if entry is None:

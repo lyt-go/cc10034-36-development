@@ -82,12 +82,25 @@ def get_entry(module: str, entry_id: int) -> dict[str, Any]:
     return entry
 
 
+@router.get("/{module}/{entry_id}/settlement", response_model=dict)
+def settlement_panel(module: str, entry_id: int) -> dict[str, Any]:
+    """结清面板：仅授权审批等实现了 settlement_panel 的模块可用。"""
+    service = require_service(module)
+    panel = getattr(service, "settlement_panel", None)
+    if panel is None:
+        raise HTTPException(status_code=404, detail=f"模块 {module} 不支持结清面板")
+    result = panel(entry_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"{service.ENTITY} {entry_id} 不存在或已归档")
+    return result
+
+
 @router.post("/{module}", response_model=ActionResult)
 def create_entry(module: str, payload: EntryPayload) -> ActionResult:
     service = require_service(module)
     entry, missing = service.create_entry(payload.values)
     if missing:
-        return ActionResult(ok=False, message=f"缺少必填字段：{'、'.join(missing)}")
+        return ActionResult(ok=False, message=service.create_failure_message(missing))
     return ActionResult(ok=True, message=f"{service.ENTITY}已登记", entry=entry)
 
 
